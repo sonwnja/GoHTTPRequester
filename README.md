@@ -1,2 +1,4 @@
-# GoHTTPRequester
-一个Go语言HTTP请求工具
+# 描述
+一个Go语言HTTP请求工具。暂时仅布局，后续写代码逻辑
+# 用法
+资源文件已存在，直接在goland中编译即可。
