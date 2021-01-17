@@ -4,15 +4,43 @@ import (
 	"fmt"
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
+	"math/rand"
+	"reflect"
+	"time"
 )
 
-type Species struct {
+//实例化1个窗口
+var window MainWindow
+//分配4个LineEdit控件的指针
+var urlInput *walk.LineEdit
+var header1Key,header1Val *walk.LineEdit
+var header2Key,header2Val *walk.LineEdit
+var header3Key,header3Val *walk.LineEdit
+//分配2个TextEdit控件的指针
+var resp *walk.TextEdit
+var head *walk.TextEdit
+//分配1个ComboBox控件指针
+var method *walk.ComboBox
+//分配1个TextEdit控件的指针
+var pdata *walk.TextEdit
+//分配1个接口数组指针
+var proxys []interface{}
+//分配1个TableView控件指针
+var tv *walk.TableView
+//实例化1个[]FeildSetting
+var FS []FeildSetting
+//分配3个LineEdit控件的指针
+var proxyProto *walk.LineEdit
+var proxyIP *walk.LineEdit
+var proxyPort *walk.LineEdit
+
+type METHOD struct {
 	Id   int
 	Method string
 }
 
-func KnownSpecies() []*Species {
-	return []*Species{
+func HTTPMETHOD() []*METHOD {
+	return []*METHOD{
 		{1, "GET"},
 		{2, "POST"},
 		{3, "HEAD"},
@@ -22,11 +50,42 @@ func KnownSpecies() []*Species {
 	}
 }
 
+type FeildSetting struct {
+	Id   int
+	Proto string
+	Host string
+	Port string
+	Speed string
+}
+
+
+func ProxySetting() []FeildSetting {
+	return FS
+}
+func SetProxy(p []interface{}){
+	FS = nil
+	tv.SetModel(nil)
+	for i,v := range p{
+		m := v.(map[string]interface{})
+		proto := m["protocol"]
+		ip := m["ip"]
+		port := m["port"]
+		speed := m["speed"]
+		protocol := fmt.Sprintf("%s",proto)
+		host := fmt.Sprintf("%s",ip)
+		hostPort := fmt.Sprintf("%s",port)
+		sp := fmt.Sprintf("%g",speed)
+		var fs FeildSetting
+		fs.Id = i + 1
+		fs.Proto = protocol
+		fs.Host = host
+		fs.Port = hostPort
+		fs.Speed = sp
+		FS = append(FS, fs)
+	}
+}
+
 func main() {
-	//实例化一个窗口
-	var window MainWindow
-	//分配一个LineEdit控件的指针
-	var le *walk.LineEdit
 	//设置窗口标题
 	window.Title = "Go HttpRequester"
 	//垂直布局
@@ -34,13 +93,11 @@ func main() {
 	//窗口子内容
 	window.Children = []Widget{
 		GroupBox{
+			MaxSize: Size{Width: 500},
 			Font: Font{
 				Family:    "微软雅黑",
 				PointSize: 0,
 				Bold:      true,
-				Italic:    false,
-				Underline: false,
-				StrikeOut: false,
 			},
 			Title: "请求",
 			Layout: VBox{},
@@ -50,34 +107,215 @@ func main() {
 						Family:    "微软雅黑",
 						PointSize: 0,
 						Bold:      false,
-						Italic:    false,
-						Underline: false,
-						StrikeOut: false,
 					},
-					Title: "设置请求URL",
+					Title: "设置请求",
 					Layout: VBox{},
 					Children: []Widget{
-						Composite{
-							Layout: HBox{},
-							Children: []Widget{
-								ComboBox{
-									BindingMember:         "Id",
-									CurrentIndex:          0,
-									DisplayMember:         "Method",
-									Model:                 KnownSpecies(),
+						TabWidget{
+							Pages: []TabPage{
+								{
+									Background: SystemColorBrush{
+										Color: 4,
+									},
+									Title: "发请求",
+									Layout: HBox{},
+									Children: []Widget{
+										ComboBox{
+											AssignTo: &method,
+											MaxSize: Size{Width:60},
+											BindingMember:         "Id",
+											CurrentIndex:          0,
+											DisplayMember:         "Method",
+											Model:                 HTTPMETHOD(),
+										},
+										LineEdit{
+											AssignTo: &urlInput,
+											CueBanner: "输入url",
+											MaxLength:          255,
+										},
+										PushButton{
+											MaxSize: Size{Width: 50},
+											Text: "请求",
+											OnClicked: func() {
+												method := method.Text()
+												url := urlInput.Text()
+												if url == ""{
+													return
+												}
+												headers := make(map[string]string)
+												h1k,h1v := header1Key.Text(),header1Val.Text()
+												h2k,h2v := header2Key.Text(),header2Val.Text()
+												h3k,h3v := header3Key.Text(),header3Val.Text()
+												pProto,pIP,pPort := proxyProto.Text(),proxyIP.Text(),proxyPort.Text()
+												var pflag,h,h1,h2,h3 bool
+												if pProto != "" && pIP != "" && pPort != "" {
+													pflag = true
+												}else{
+													pflag = false
+												}
+												if h1k != "" && h1v != "" {
+													headers[h1k] = h1v
+													h1 = true
+												}else {
+													h1 = false
+												}
+												if h2k != "" && h2v != "" {
+													headers[h2k] = h2v
+													h2 = true
+												}else {
+													h2 = false
+												}
+												if h3k != "" && h3v != "" {
+													headers[h3k] = h3v
+													h3 = true
+												}else {
+													h3 = false
+												}
+												if h1 || h2 || h3 {
+													h = true
+												}else {
+													h = false
+												}
+												switch method {
+												case "GET":
+													if h{
+														setHeader(headers)
+													}
+													if pflag {
+														responseHeader, responseBody := ProxyGET(url,pProto,pIP,pPort)
+														head.SetText(responseHeader)
+														resp.SetText(responseBody)
+													}else {
+														responseHeader, responseBody := GET(url)
+														head.SetText(responseHeader)
+														resp.SetText(responseBody)
+													}
+												case "POST":
+													if h{
+														setHeader(headers)
+													}
+													if pflag {
+														data := pdata.Text()
+														responseHeader, responseBody := ProxyPOST(url,data,pProto,pIP,pPort)
+														head.SetText(responseHeader)
+														resp.SetText(responseBody)
+													}else {
+														data := pdata.Text()
+														responseHeader, responseBody := POST(url,data)
+														head.SetText(responseHeader)
+														resp.SetText(responseBody)
+													}
+												case "HEAD":
+													if h{
+														setHeader(headers)
+													}
+													if pflag {
+														data := pdata.Text()
+														responseHeader, responseBody := ProxyHEAD(url,data,pProto,pIP,pPort)
+														head.SetText(responseHeader)
+														resp.SetText(responseBody)
+													}else {
+														data := pdata.Text()
+														responseHeader, responseBody := HEAD(url,data)
+														head.SetText(responseHeader)
+														resp.SetText(responseBody)
+													}
+												case "PUT":
+													if h{
+														setHeader(headers)
+													}
+													if pflag {
+														data := pdata.Text()
+														responseHeader, responseBody := ProxyPUT(url,data,pProto,pIP,pPort)
+														head.SetText(responseHeader)
+														resp.SetText(responseBody)
+													}else {
+														data := pdata.Text()
+														responseHeader, responseBody := PUT(url,data)
+														head.SetText(responseHeader)
+														resp.SetText(responseBody)
+													}
+												case "DELETE":
+													if h{
+														setHeader(headers)
+													}
+													if pflag {
+														data := pdata.Text()
+														responseHeader, responseBody := ProxyDELETE(url,data,pProto,pIP,pPort)
+														head.SetText(responseHeader)
+														resp.SetText(responseBody)
+													}else {
+														data := pdata.Text()
+														responseHeader, responseBody := DELETE(url,data)
+														head.SetText(responseHeader)
+														resp.SetText(responseBody)
+													}
+												case "OPTIONS":
+													if h{
+														setHeader(headers)
+													}
+													if pflag {
+														data := pdata.Text()
+														responseHeader, responseBody := ProxyOPTIONS(url,data,pProto,pIP,pPort)
+														head.SetText(responseHeader)
+														resp.SetText(responseBody)
+													}else {
+														data := pdata.Text()
+														responseHeader, responseBody := OPTIONS(url,data)
+														head.SetText(responseHeader)
+														resp.SetText(responseBody)
+													}
+												}
+											},
+										},
+									},
 								},
-								Label{
-									Text: "URL:",
-								},
-								LineEdit{
-									AssignTo: &le,
-									ToolTipText:        "输入url",
-									MaxLength:          255,
-								},
-								PushButton{
-									Text: "请求",
-									OnClicked: func() {
-										fmt.Println(le.Text())
+								{
+									Background: SystemColorBrush{
+										Color: 4,
+									},
+									Title: "请求头",
+									Layout: VBox{},
+									Children: []Widget{
+										Composite{
+											Layout: HBox{},
+											Children: []Widget{
+												LineEdit{
+													AssignTo: &header1Key,
+													CueBanner: "Key",
+												},
+												LineEdit{
+													AssignTo: &header1Val,
+													CueBanner: "Value",
+												},
+											},
+										},
+										Composite{
+											Layout: HBox{},
+											Children: []Widget{
+												LineEdit{
+													AssignTo: &header2Key,
+													CueBanner: "Key",
+												},
+												LineEdit{
+													AssignTo: &header2Val,
+													CueBanner: "Value",
+												},
+											},
+										},
+										Composite{
+											Layout: HBox{},
+											Children: []Widget{
+												LineEdit{
+													AssignTo: &header3Key,
+													CueBanner: "Key",
+												},
+												LineEdit{
+													AssignTo: &header3Val,
+													CueBanner: "Value",
+												},
+											},
+										},
 									},
 								},
 							},
@@ -89,38 +327,130 @@ func main() {
 						Family:    "微软雅黑",
 						PointSize: 0,
 						Bold:      false,
-						Italic:    false,
-						Underline: false,
-						StrikeOut: false,
 					},
-					Title: "设置请求头",
 					Layout: VBox{},
+					Title: "设置代理",
 					Children: []Widget{
-						Composite{
-							Layout: HBox{},
-							Children: []Widget{
-								Label{Text: "Key"},
-								LineEdit{},
-								Label{Text: "Value"},
-								LineEdit{},
-							},
-						},
-						Composite{
-							Layout: HBox{},
-							Children: []Widget{
-								Label{Text: "Key"},
-								LineEdit{},
-								Label{Text: "Value"},
-								LineEdit{},
-							},
-						},
-						Composite{
-							Layout: HBox{},
-							Children: []Widget{
-								Label{Text: "Key"},
-								LineEdit{},
-								Label{Text: "Value"},
-								LineEdit{},
+						TabWidget{
+							Pages: []TabPage{
+								{
+									Background: SystemColorBrush{
+										Color: 4,
+									},
+									Layout: HBox{},
+									Title: "填写代理",
+									Children: []Widget{
+										Composite{
+											Layout: HBox{},
+											Children: []Widget{
+												LineEdit{
+													AssignTo: &proxyProto,
+													CueBanner: "协议",
+												},
+												LineEdit{
+													AssignTo: &proxyIP,
+													CueBanner: "IP",
+													MinSize: Size{Width: 200},
+												},
+												LineEdit{
+													AssignTo: &proxyPort,
+													CueBanner: "端口",
+												},
+											},
+										},
+									},
+								},
+								{
+									Background: SystemColorBrush{
+										Color: 4,
+									},
+									Title: "获取代理",
+									Layout: VBox{},
+									Children: []Widget{
+										Composite{
+											Layout: HBox{},
+											MaxSize: Size{Height: 30},
+											Children: []Widget{
+												PushButton{
+													Text: "获取",
+													Font: Font{PointSize: 10},
+													OnClicked: func() {
+														proxys = getProxy()
+														SetProxy(proxys)
+														tv.SetModel(ProxySetting())
+													},
+												},
+												PushButton{
+													Text: "刷新",
+													Font: Font{PointSize: 10},
+													OnClicked: func() {
+														rand.Seed(time.Now().UnixNano())
+														page := rand.Intn(4)
+														proxys = refresh(page+1)
+														SetProxy(proxys)
+														tv.SetModel(ProxySetting())
+													},
+												},
+												PushButton{
+													Font: Font{PointSize: 10},
+													Text: "添加",
+													OnClicked: func() {
+														model := tv.Model()
+														index := tv.CurrentIndex()+1
+														v := reflect.ValueOf(model)
+														var proto,host,port string
+														for i:=0;i<v.Len();i++{
+															id := v.Index(i).Field(0).Int()
+															if int64(index) == id{
+																proto = v.Index(i).Field(1).String()
+																host = v.Index(i).Field(2).String()
+																port = v.Index(i).Field(3).String()
+															}
+														}
+														proxyProto.SetText(proto)
+														proxyIP.SetText(host)
+														proxyPort.SetText(port)
+													},
+												},
+											},
+										},
+										TableView{
+											AssignTo:           &tv,
+											Columns: []TableViewColumn{
+												{
+													Name: "Id",
+													DataMember: "Id",
+													Title:      "序号",
+													Width:      50,
+												},
+												{
+													DataMember: "Proto",
+													Title:      "协议",
+													Width:      50,
+												},
+												{
+													Name: "Host",
+													DataMember: "Host",
+													Title:      "IP",
+													Width:      150,
+												},
+												{
+													Name: "Port",
+													DataMember: "Port",
+													Title:      "端口",
+													Width:      80,
+												},
+												{
+													Name: "Speed",
+													DataMember: "Speed",
+													Title:      "响应速度",
+												},
+											},
+											ColumnsOrderable:            true,
+											ColumnsSizable:              true,
+										},
+									},
+								},
 							},
 						},
 					},
@@ -130,9 +460,6 @@ func main() {
 						Family:    "微软雅黑",
 						PointSize: 0,
 						Bold:      false,
-						Italic:    false,
-						Underline: false,
-						StrikeOut: false,
 					},
 					Title: "POST请求数据",
 					Layout: VBox{},
@@ -141,6 +468,7 @@ func main() {
 							Layout: VBox{},
 							Children: []Widget{
 								TextEdit{
+									AssignTo: &pdata,
 								},
 							},
 						},
@@ -153,9 +481,6 @@ func main() {
 				Family:    "微软雅黑",
 				PointSize: 0,
 				Bold:      true,
-				Italic:    false,
-				Underline: false,
-				StrikeOut: false,
 			},
 			Title: "响应",
 			Layout: VBox{},
@@ -165,9 +490,6 @@ func main() {
 						Family:    "微软雅黑",
 						PointSize: 0,
 						Bold:      false,
-						Italic:    false,
-						Underline: false,
-						StrikeOut: false,
 					},
 					Title: "请求结果",
 					Layout: VBox{},
@@ -176,14 +498,24 @@ func main() {
 							Title: "响应头",
 							Layout: VBox{},
 							Children: []Widget{
-								TextEdit{},
+								TextEdit{
+									AssignTo: &head,
+									HScroll: true,
+									VScroll: true,
+									ReadOnly: true,
+								},
 							},
 						},
 						GroupBox{
 							Title: "响应体",
 							Layout: VBox{},
 							Children: []Widget{
-								TextEdit{},
+								TextEdit{
+									AssignTo:           &resp,
+									HScroll:            true,
+									VScroll:            true,
+									ReadOnly: true,
+								},
 							},
 						},
 					},
@@ -191,6 +523,6 @@ func main() {
 			},
 		},
 	}
-	//运行
+	//运行窗口
 	window.Run()
 }
