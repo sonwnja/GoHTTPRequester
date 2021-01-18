@@ -5,10 +5,12 @@ import (
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
 	"math/rand"
+	"os"
 	"reflect"
 	"time"
 )
-
+//分配1个窗口指针
+var wd *walk.MainWindow
 //实例化1个窗口
 var window MainWindow
 //分配7个LineEdit控件的指针
@@ -33,10 +35,24 @@ var FS []FieldSetting
 var proxyProto *walk.LineEdit
 var proxyIP *walk.LineEdit
 var proxyPort *walk.LineEdit
+//分配1个Webview控件指针
+var render *walk.WebView
+//定义1个全局的系统当前用户临时目录变量
+var tmpDir string
+//定义1个全局的临时文件名变量
+var tmpFileName string
 
 type METHOD struct {
 	Id   int
 	Method string
+}
+
+func init()  {
+	tmpDir = os.Getenv("TMP")
+	timestamp := time.Now().Unix()
+	tmpFileName = fmt.Sprintf("%s\\.GoHTTPRequester_%d.html",tmpDir,timestamp)
+	f,_ := os.Create(tmpFileName)
+	defer f.Close()
 }
 
 func Methods() []*METHOD {
@@ -88,7 +104,28 @@ func SetProxy(p []interface{}){
 	}
 }
 
+func writeTmpHTMLFile(content string)  {
+	var (
+		err error
+	)
+	fd, err := os.OpenFile(tmpFileName, os.O_WRONLY|os.O_TRUNC, 0600)
+	if err != nil {
+		panic(err)
+	} else {
+		_,err = fd.Write([]byte(content))
+	}
+	defer fd.Close()
+}
+func delTmpHTMLFile()  {
+	err := os.Remove(tmpFileName)
+	if err != nil{
+		panic(err)
+	}
+}
+
 func main() {
+	//将wd指针指向当前window
+	window.AssignTo = &wd
 	//设置窗口标题
 	window.Title = "Go HttpRequester 版本:v1.0"
 	//垂直布局
@@ -193,6 +230,9 @@ func main() {
 														respHDErr := resp.SetText(responseBody)
 														if respHDErr != nil {
 															panic(respHDErr)
+														}else {
+															writeTmpHTMLFile(responseBody)
+															render.SetURL("file:///"+tmpFileName)
 														}
 													}else {
 														responseHeader, responseBody := GET(url)
@@ -203,6 +243,9 @@ func main() {
 														respHDErr := resp.SetText(responseBody)
 														if respHDErr != nil {
 															panic(respHDErr)
+														}else {
+															writeTmpHTMLFile(responseBody)
+															render.SetURL("file:///"+tmpFileName)
 														}
 													}
 												case "POST":
@@ -219,6 +262,9 @@ func main() {
 														respHDErr := resp.SetText(responseBody)
 														if respHDErr != nil {
 															panic(respHDErr)
+														}else {
+															writeTmpHTMLFile(responseBody)
+															render.SetURL("file:///"+tmpFileName)
 														}
 													}else {
 														data := data.Text()
@@ -230,6 +276,9 @@ func main() {
 														respHDErr := resp.SetText(responseBody)
 														if respHDErr != nil {
 															panic(respHDErr)
+														}else {
+															writeTmpHTMLFile(responseBody)
+															render.SetURL("file:///"+tmpFileName)
 														}
 													}
 												case "HEAD":
@@ -584,27 +633,52 @@ func main() {
 					Title: "请求结果",
 					Layout: VBox{},
 					Children: []Widget{
-						GroupBox{
-							Title: "响应头",
-							Layout: VBox{},
-							Children: []Widget{
-								TextEdit{
-									AssignTo: &head,
-									HScroll: true,
-									VScroll: true,
-									ReadOnly: true,
+						TabWidget{
+							Pages: []TabPage{
+								{
+									Background: SystemColorBrush{
+										Color: 4,
+									},
+									Layout: HBox{},
+									Title: "文本",
+									Children: []Widget{
+										GroupBox{
+											Title: "响应头",
+											Layout: VBox{},
+											Children: []Widget{
+												TextEdit{
+													AssignTo: &head,
+													HScroll: true,
+													VScroll: true,
+													ReadOnly: true,
+												},
+											},
+										},
+										GroupBox{
+											Title: "响应体",
+											Layout: VBox{},
+											Children: []Widget{
+												TextEdit{
+													AssignTo:           &resp,
+													HScroll:            true,
+													VScroll:            true,
+													ReadOnly: true,
+												},
+											},
+										},
+									},
 								},
-							},
-						},
-						GroupBox{
-							Title: "响应体",
-							Layout: VBox{},
-							Children: []Widget{
-								TextEdit{
-									AssignTo:           &resp,
-									HScroll:            true,
-									VScroll:            true,
-									ReadOnly: true,
+								{
+									Background: SystemColorBrush{
+										Color: 4,
+									},
+									Title: "渲染",
+									Layout: VBox{},
+									Children: []Widget{
+										WebView{
+											AssignTo: &render,
+										},
+									},
 								},
 							},
 						},
@@ -615,4 +689,6 @@ func main() {
 	}
 	//运行窗口
 	window.Run()
+	//关闭窗口后删除临时文件
+	delTmpHTMLFile()
 }
