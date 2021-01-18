@@ -52,7 +52,10 @@ func init()  {
 	timestamp := time.Now().Unix()
 	tmpFileName = fmt.Sprintf("%s\\.GoHTTPRequester_%d.html",tmpDir,timestamp)
 	f,_ := os.Create(tmpFileName)
-	defer f.Close()
+	err := f.Close()
+	if err != nil{
+		panic(err)
+	}
 }
 
 func Methods() []*METHOD {
@@ -113,8 +116,14 @@ func writeTmpHTMLFile(content string)  {
 		panic(err)
 	} else {
 		_,err = fd.Write([]byte(content))
+		if err != nil{
+			panic(err)
+		}
 	}
-	defer fd.Close()
+	err = fd.Close()
+	if err != nil{
+		panic(err)
+	}
 }
 func delTmpHTMLFile()  {
 	err := os.Remove(tmpFileName)
@@ -232,7 +241,10 @@ func main() {
 															panic(respHDErr)
 														}else {
 															writeTmpHTMLFile(responseBody)
-															render.SetURL("file:///"+tmpFileName)
+															err := render.SetURL("file:///"+tmpFileName)
+															if err != nil{
+																panic(err)
+															}
 														}
 													}else {
 														responseHeader, responseBody := GET(url)
@@ -245,7 +257,10 @@ func main() {
 															panic(respHDErr)
 														}else {
 															writeTmpHTMLFile(responseBody)
-															render.SetURL("file:///"+tmpFileName)
+															err := render.SetURL("file:///"+tmpFileName)
+															if err != nil{
+																panic(err)
+															}
 														}
 													}
 												case "POST":
@@ -264,7 +279,10 @@ func main() {
 															panic(respHDErr)
 														}else {
 															writeTmpHTMLFile(responseBody)
-															render.SetURL("file:///"+tmpFileName)
+															err := render.SetURL("file:///"+tmpFileName)
+															if err != nil{
+																panic(err)
+															}
 														}
 													}else {
 														data := data.Text()
@@ -278,7 +296,10 @@ func main() {
 															panic(respHDErr)
 														}else {
 															writeTmpHTMLFile(responseBody)
-															render.SetURL("file:///"+tmpFileName)
+															err := render.SetURL("file:///"+tmpFileName)
+															if err != nil{
+																panic(err)
+															}
 														}
 													}
 												case "HEAD":
