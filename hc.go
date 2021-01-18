@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 var heads = make(map[string]string)
 func setHeader(h map[string]string)  {
@@ -25,8 +26,9 @@ func GET(url string)  (string,string){
 	//处理返回结果
 	response, err := client.Do(req)
 	if err != nil{
-		fmt.Println(err)
-		return "",""
+		now := time.Now().Format("2006-01-02 15:04:05")
+		now = fmt.Sprintf("【错误日志】\r\n[%s] ",now)
+		return "",now + err.Error()
 	}
 	defer response.Body.Close()
 	codeDesc := response.Status
@@ -68,8 +70,9 @@ func ProxyGET(urlLink string,pProto string,pHost string,pPort string)  (string,s
 	//处理返回结果
 	response, err := client.Do(req)
 	if err != nil{
-		fmt.Println(err)
-		return "",""
+		now := time.Now().Format("2006-01-02 15:04:05")
+		now = fmt.Sprintf("【错误日志】\r\n[%s] ",now)
+		return "",now + err.Error()
 	}
 	defer response.Body.Close()
 	codeDesc := response.Status
@@ -104,8 +107,9 @@ func POST(url string,params string)  (string,string){
 	//处理返回结果
 	response, err := client.Do(req)
 	if err != nil{
-		fmt.Println(err)
-		return "",""
+		now := time.Now().Format("2006-01-02 15:04:05")
+		now = fmt.Sprintf("【错误日志】\r\n[%s] ",now)
+		return "",now + err.Error()
 	}
 	defer response.Body.Close()
 	codeDesc := response.Status
@@ -147,8 +151,9 @@ func ProxyPOST(urlLink string,params string,pProto string,pHost string,pPort str
 	//处理返回结果
 	response, err := client.Do(req)
 	if err != nil{
-		fmt.Println(err)
-		return "",""
+		now := time.Now().Format("2006-01-02 15:04:05")
+		now = fmt.Sprintf("【错误日志】\r\n[%s] ",now)
+		return "",now + err.Error()
 	}
 	defer response.Body.Close()
 	codeDesc := response.Status
@@ -184,8 +189,9 @@ func HEAD(url string,params string)  (string,string){
 	//处理返回结果
 	response, err := client.Do(req)
 	if err != nil{
-		fmt.Println(err)
-		return "",""
+		now := time.Now().Format("2006-01-02 15:04:05")
+		now = fmt.Sprintf("【错误日志】\r\n[%s] ",now)
+		return "",now + err.Error()
 	}
 	defer response.Body.Close()
 	codeDesc := response.Status
@@ -227,8 +233,9 @@ func ProxyHEAD(urlLink string,params string,pProto string,pHost string,pPort str
 	//处理返回结果
 	response, err := client.Do(req)
 	if err != nil{
-		fmt.Println(err)
-		return "",""
+		now := time.Now().Format("2006-01-02 15:04:05")
+		now = fmt.Sprintf("【错误日志】\r\n[%s] ",now)
+		return "",now + err.Error()
 	}
 	defer response.Body.Close()
 	codeDesc := response.Status
@@ -264,8 +271,9 @@ func PUT(url string,params string)  (string,string){
 	//处理返回结果
 	response, err := client.Do(req)
 	if err != nil{
-		fmt.Println(err)
-		return "",""
+		now := time.Now().Format("2006-01-02 15:04:05")
+		now = fmt.Sprintf("【错误日志】\r\n[%s] ",now)
+		return "",now + err.Error()
 	}
 	defer response.Body.Close()
 	codeDesc := response.Status
@@ -308,8 +316,9 @@ func ProxyPUT(urlLink string,params string,pProto string,pHost string,pPort stri
 	//处理返回结果
 	response, err := client.Do(req)
 	if err != nil{
-		fmt.Println(err)
-		return "",""
+		now := time.Now().Format("2006-01-02 15:04:05")
+		now = fmt.Sprintf("【错误日志】\r\n[%s] ",now)
+		return "",now + err.Error()
 	}
 	defer response.Body.Close()
 	codeDesc := response.Status
@@ -344,8 +353,9 @@ func DELETE(url string,params string)  (string,string){
 	//处理返回结果
 	response, err := client.Do(req)
 	if err != nil{
-		fmt.Println(err)
-		return "",""
+		now := time.Now().Format("2006-01-02 15:04:05")
+		now = fmt.Sprintf("【错误日志】\r\n[%s] ",now)
+		return "",now + err.Error()
 	}
 	defer response.Body.Close()
 	codeDesc := response.Status
@@ -387,8 +397,9 @@ func ProxyDELETE(urlLink string,params string,pProto string,pHost string,pPort s
 	//处理返回结果
 	response, err := client.Do(req)
 	if err != nil{
-		fmt.Println(err)
-		return "",""
+		now := time.Now().Format("2006-01-02 15:04:05")
+		now = fmt.Sprintf("【错误日志】\r\n[%s] ",now)
+		return "",now + err.Error()
 	}
 	defer response.Body.Close()
 	codeDesc := response.Status
@@ -425,8 +436,9 @@ func OPTIONS(url string,params string)  (string,string){
 	//处理返回结果
 	response, err := client.Do(req)
 	if err != nil{
-		fmt.Println(err)
-		return "",""
+		now := time.Now().Format("2006-01-02 15:04:05")
+		now = fmt.Sprintf("【错误日志】\r\n[%s] ",now)
+		return "",now + err.Error()
 	}
 	defer response.Body.Close()
 	codeDesc := response.Status
@@ -468,8 +480,9 @@ func ProxyOPTIONS(urlLink string,params string,pProto string,pHost string,pPort 
 	//处理返回结果
 	response, err := client.Do(req)
 	if err != nil{
-		fmt.Println(err)
-		return "",""
+		now := time.Now().Format("2006-01-02 15:04:05")
+		now = fmt.Sprintf("【错误日志】\r\n[%s] ",now)
+		return "",now + err.Error()
 	}
 	defer response.Body.Close()
 	codeDesc := response.Status

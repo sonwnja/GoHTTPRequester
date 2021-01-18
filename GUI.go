@@ -11,7 +11,7 @@ import (
 
 //实例化1个窗口
 var window MainWindow
-//分配4个LineEdit控件的指针
+//分配7个LineEdit控件的指针
 var urlInput *walk.LineEdit
 var header1Key,header1Val *walk.LineEdit
 var header2Key,header2Val *walk.LineEdit
@@ -22,13 +22,13 @@ var head *walk.TextEdit
 //分配1个ComboBox控件指针
 var method *walk.ComboBox
 //分配1个TextEdit控件的指针
-var pdata *walk.TextEdit
+var data *walk.TextEdit
 //分配1个接口数组指针
-var proxys []interface{}
+var proxies []interface{}
 //分配1个TableView控件指针
 var tv *walk.TableView
-//实例化1个[]FeildSetting
-var FS []FeildSetting
+//实例化1个[]FieldSetting
+var FS []FieldSetting
 //分配3个LineEdit控件的指针
 var proxyProto *walk.LineEdit
 var proxyIP *walk.LineEdit
@@ -39,7 +39,7 @@ type METHOD struct {
 	Method string
 }
 
-func HTTPMETHOD() []*METHOD {
+func Methods() []*METHOD {
 	return []*METHOD{
 		{1, "GET"},
 		{2, "POST"},
@@ -50,7 +50,7 @@ func HTTPMETHOD() []*METHOD {
 	}
 }
 
-type FeildSetting struct {
+type FieldSetting struct {
 	Id   int
 	Proto string
 	Host string
@@ -59,12 +59,15 @@ type FeildSetting struct {
 }
 
 
-func ProxySetting() []FeildSetting {
+func ProxySetting() []FieldSetting {
 	return FS
 }
 func SetProxy(p []interface{}){
 	FS = nil
-	tv.SetModel(nil)
+	tvHDErr := tv.SetModel(nil)
+	if tvHDErr != nil{
+		panic(tvHDErr)
+	}
 	for i,v := range p{
 		m := v.(map[string]interface{})
 		proto := m["protocol"]
@@ -75,7 +78,7 @@ func SetProxy(p []interface{}){
 		host := fmt.Sprintf("%s",ip)
 		hostPort := fmt.Sprintf("%s",port)
 		sp := fmt.Sprintf("%g",speed)
-		var fs FeildSetting
+		var fs FieldSetting
 		fs.Id = i + 1
 		fs.Proto = protocol
 		fs.Host = host
@@ -121,12 +124,12 @@ func main() {
 									Layout: HBox{},
 									Children: []Widget{
 										ComboBox{
-											AssignTo: &method,
-											MaxSize: Size{Width:60},
-											BindingMember:         "Id",
-											CurrentIndex:          0,
-											DisplayMember:         "Method",
-											Model:                 HTTPMETHOD(),
+											AssignTo:      &method,
+											MaxSize:       Size{Width:60},
+											BindingMember: "Id",
+											CurrentIndex:  0,
+											DisplayMember: "Method",
+											Model:         Methods(),
 										},
 										LineEdit{
 											AssignTo: &urlInput,
@@ -147,11 +150,11 @@ func main() {
 												h2k,h2v := header2Key.Text(),header2Val.Text()
 												h3k,h3v := header3Key.Text(),header3Val.Text()
 												pProto,pIP,pPort := proxyProto.Text(),proxyIP.Text(),proxyPort.Text()
-												var pflag,h,h1,h2,h3 bool
+												var proxyFlag,h,h1,h2,h3 bool
 												if pProto != "" && pIP != "" && pPort != "" {
-													pflag = true
+													proxyFlag = true
 												}else{
-													pflag = false
+													proxyFlag = false
 												}
 												if h1k != "" && h1v != "" {
 													headers[h1k] = h1v
@@ -181,89 +184,161 @@ func main() {
 													if h{
 														setHeader(headers)
 													}
-													if pflag {
+													if proxyFlag {
 														responseHeader, responseBody := ProxyGET(url,pProto,pIP,pPort)
-														head.SetText(responseHeader)
-														resp.SetText(responseBody)
+														headHDErr := head.SetText(responseHeader)
+														if headHDErr != nil {
+															panic(headHDErr)
+														}
+														respHDErr := resp.SetText(responseBody)
+														if respHDErr != nil {
+															panic(respHDErr)
+														}
 													}else {
 														responseHeader, responseBody := GET(url)
-														head.SetText(responseHeader)
-														resp.SetText(responseBody)
+														headHDErr := head.SetText(responseHeader)
+														if headHDErr != nil {
+															panic(headHDErr)
+														}
+														respHDErr := resp.SetText(responseBody)
+														if respHDErr != nil {
+															panic(respHDErr)
+														}
 													}
 												case "POST":
 													if h{
 														setHeader(headers)
 													}
-													if pflag {
-														data := pdata.Text()
+													if proxyFlag {
+														data := data.Text()
 														responseHeader, responseBody := ProxyPOST(url,data,pProto,pIP,pPort)
-														head.SetText(responseHeader)
-														resp.SetText(responseBody)
+														headHDErr := head.SetText(responseHeader)
+														if headHDErr != nil {
+															panic(headHDErr)
+														}
+														respHDErr := resp.SetText(responseBody)
+														if respHDErr != nil {
+															panic(respHDErr)
+														}
 													}else {
-														data := pdata.Text()
+														data := data.Text()
 														responseHeader, responseBody := POST(url,data)
-														head.SetText(responseHeader)
-														resp.SetText(responseBody)
+														headHDErr := head.SetText(responseHeader)
+														if headHDErr != nil {
+															panic(headHDErr)
+														}
+														respHDErr := resp.SetText(responseBody)
+														if respHDErr != nil {
+															panic(respHDErr)
+														}
 													}
 												case "HEAD":
 													if h{
 														setHeader(headers)
 													}
-													if pflag {
-														data := pdata.Text()
+													if proxyFlag {
+														data := data.Text()
 														responseHeader, responseBody := ProxyHEAD(url,data,pProto,pIP,pPort)
-														head.SetText(responseHeader)
-														resp.SetText(responseBody)
+														headHDErr := head.SetText(responseHeader)
+														if headHDErr != nil {
+															panic(headHDErr)
+														}
+														respHDErr := resp.SetText(responseBody)
+														if respHDErr != nil {
+															panic(respHDErr)
+														}
 													}else {
-														data := pdata.Text()
+														data := data.Text()
 														responseHeader, responseBody := HEAD(url,data)
-														head.SetText(responseHeader)
-														resp.SetText(responseBody)
+														headHDErr := head.SetText(responseHeader)
+														if headHDErr != nil {
+															panic(headHDErr)
+														}
+														respHDErr := resp.SetText(responseBody)
+														if respHDErr != nil {
+															panic(respHDErr)
+														}
 													}
 												case "PUT":
 													if h{
 														setHeader(headers)
 													}
-													if pflag {
-														data := pdata.Text()
+													if proxyFlag {
+														data := data.Text()
 														responseHeader, responseBody := ProxyPUT(url,data,pProto,pIP,pPort)
-														head.SetText(responseHeader)
-														resp.SetText(responseBody)
+														headHDErr := head.SetText(responseHeader)
+														if headHDErr != nil {
+															panic(headHDErr)
+														}
+														respHDErr := resp.SetText(responseBody)
+														if respHDErr != nil {
+															panic(respHDErr)
+														}
 													}else {
-														data := pdata.Text()
+														data := data.Text()
 														responseHeader, responseBody := PUT(url,data)
-														head.SetText(responseHeader)
-														resp.SetText(responseBody)
+														headHDErr := head.SetText(responseHeader)
+														if headHDErr != nil {
+															panic(headHDErr)
+														}
+														respHDErr := resp.SetText(responseBody)
+														if respHDErr != nil {
+															panic(respHDErr)
+														}
 													}
 												case "DELETE":
 													if h{
 														setHeader(headers)
 													}
-													if pflag {
-														data := pdata.Text()
+													if proxyFlag {
+														data := data.Text()
 														responseHeader, responseBody := ProxyDELETE(url,data,pProto,pIP,pPort)
-														head.SetText(responseHeader)
-														resp.SetText(responseBody)
+														headHDErr := head.SetText(responseHeader)
+														if headHDErr != nil {
+															panic(headHDErr)
+														}
+														respHDErr := resp.SetText(responseBody)
+														if respHDErr != nil {
+															panic(respHDErr)
+														}
 													}else {
-														data := pdata.Text()
+														data := data.Text()
 														responseHeader, responseBody := DELETE(url,data)
-														head.SetText(responseHeader)
-														resp.SetText(responseBody)
+														headHDErr := head.SetText(responseHeader)
+														if headHDErr != nil {
+															panic(headHDErr)
+														}
+														respHDErr := resp.SetText(responseBody)
+														if respHDErr != nil {
+															panic(respHDErr)
+														}
 													}
 												case "OPTIONS":
 													if h{
 														setHeader(headers)
 													}
-													if pflag {
-														data := pdata.Text()
+													if proxyFlag {
+														data := data.Text()
 														responseHeader, responseBody := ProxyOPTIONS(url,data,pProto,pIP,pPort)
-														head.SetText(responseHeader)
-														resp.SetText(responseBody)
+														headHDErr := head.SetText(responseHeader)
+														if headHDErr != nil {
+															panic(headHDErr)
+														}
+														respHDErr := resp.SetText(responseBody)
+														if respHDErr != nil {
+															panic(respHDErr)
+														}
 													}else {
-														data := pdata.Text()
+														data := data.Text()
 														responseHeader, responseBody := OPTIONS(url,data)
-														head.SetText(responseHeader)
-														resp.SetText(responseBody)
+														headHDErr := head.SetText(responseHeader)
+														if headHDErr != nil {
+															panic(headHDErr)
+														}
+														respHDErr := resp.SetText(responseBody)
+														if respHDErr != nil {
+															panic(respHDErr)
+														}
 													}
 												}
 											},
@@ -375,9 +450,12 @@ func main() {
 													Text: "获取",
 													Font: Font{PointSize: 10},
 													OnClicked: func() {
-														proxys = getProxy()
-														SetProxy(proxys)
-														tv.SetModel(ProxySetting())
+														proxies = getProxy()
+														SetProxy(proxies)
+														tvHDErr := tv.SetModel(ProxySetting())
+														if tvHDErr != nil {
+															panic(tvHDErr)
+														}
 													},
 												},
 												PushButton{
@@ -386,9 +464,12 @@ func main() {
 													OnClicked: func() {
 														rand.Seed(time.Now().UnixNano())
 														page := rand.Intn(4)
-														proxys = refresh(page+1)
-														SetProxy(proxys)
-														tv.SetModel(ProxySetting())
+														proxies = refresh(page+1)
+														SetProxy(proxies)
+														tvHDErr := tv.SetModel(ProxySetting())
+														if tvHDErr != nil {
+															panic(tvHDErr)
+														}
 													},
 												},
 												PushButton{
@@ -407,9 +488,18 @@ func main() {
 																port = v.Index(i).Field(3).String()
 															}
 														}
-														proxyProto.SetText(proto)
-														proxyIP.SetText(host)
-														proxyPort.SetText(port)
+														proxyProHDErr := proxyProto.SetText(proto)
+														if proxyProHDErr != nil {
+															panic(proxyProHDErr)
+														}
+														proxyIPHDErr := proxyIP.SetText(host)
+														if proxyIPHDErr != nil {
+															panic(proxyIPHDErr)
+														}
+														proxyPortHDErr := proxyPort.SetText(port)
+														if proxyPortHDErr != nil{
+															panic(proxyPortHDErr)
+														}
 													},
 												},
 											},
@@ -468,7 +558,7 @@ func main() {
 							Layout: VBox{},
 							Children: []Widget{
 								TextEdit{
-									AssignTo: &pdata,
+									AssignTo: &data,
 								},
 							},
 						},
