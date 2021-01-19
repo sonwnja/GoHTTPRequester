@@ -9,8 +9,6 @@ import (
 	"reflect"
 	"time"
 )
-//分配1个窗口指针
-var wd *walk.MainWindow
 //实例化1个窗口
 var window MainWindow
 //分配7个LineEdit控件的指针
@@ -133,8 +131,6 @@ func delTmpHTMLFile()  {
 }
 
 func main() {
-	//将wd指针指向当前window
-	window.AssignTo = &wd
 	//设置窗口标题
 	window.Title = "Go HttpRequester 版本:v1.0"
 	//垂直布局
