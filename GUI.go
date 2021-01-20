@@ -132,7 +132,7 @@ func delTmpHTMLFile()  {
 
 func main() {
 	//设置窗口标题
-	window.Title = "Go HttpRequester 版本:v1.0"
+	window.Title = "Go HttpRequester 版本:v2.0"
 	//垂直布局
 	window.Layout = HBox{}
 	//窗口子内容
