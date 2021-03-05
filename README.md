@@ -4,5 +4,8 @@
 # 编译
 资源文件已存在，直接在goland中编译即可。
 # 运行截图
-截个图放不进来，哎
+![image](https://user-images.githubusercontent.com/15842446/110128290-97b1a180-7e01-11eb-8391-701c5a08d3a8.png)
+
+
+
 
